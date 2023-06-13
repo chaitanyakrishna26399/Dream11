@@ -7,15 +7,25 @@ const indexControllers = require('./indexController.js')
 let data = require('./jsonData.js')
 const validation = require('./validations.js')
 
+// let AWS = require('aws-sdk');
+// var dynamo = require('dynamodb');
+// dynamo.AWS.config.update(
+//   {accessKeyId: 'AKIA2NLCIXIFFZPZ5EJE', 
+//   secretAccessKey: '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', 
+//   region: "ap-south-1"});
+//   console.log(dynamo)
+
+
+
 const DB_COLLECTION_NAME = "demo-chaitanya";
 app.use(bodyParser.json());
 // Sample create document
 exports.sampleCreate = async function() {
-  // let plData = await data.readJson()
   const result = connectToDatabase()
     .then((db) => {
       const PlayersCollection = db.collection('demo-chaitanya');
-      return PlayersCollection.find({}).toArray(
+      return PlayersCollection.find({})
+      .toArray(
         (err, documents) => {
           if (err) {
             console.error('Failed to retrieve documents:', err);
@@ -31,16 +41,21 @@ exports.sampleCreate = async function() {
 app.get('/', async (req, res) => {
   var data = await exports.sampleCreate();
   console.log(data)
+  res.send(data)
 
-  res.send({ status: 1, message: "demo" });
+  // res.send({ status: 1, message: "demo" });
 })
 app.get('/process-result', indexControllers.playersList)
 app.get('/demo', async (req, res) => {
-  var data = await exports.sampleCreate();
-  console.log(data)
-
-  res.send({ status: 2, message: "demo", data: data });
-});
+    let plData = await data.readJson()
+    const result = connectToDatabase()
+      .then((db) => {
+        const PlayersCollection = db.collection('demo-chaitanya');
+        return PlayersCollection.insertMany(plData)
+      })
+    res.send(result)
+  
+  });
 app.post('/add-team',validation.selectPlayers,indexControllers.selectPlayers)
 app.get('/team-result', indexControllers.teamResult)
 
